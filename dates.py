@@ -1,0 +1,233 @@
+"""
+File: dates.py
+Author: Anshul Hallur
+Course no: CS 120 Spring 2023
+Purpose: This program processes a text file containing dates and events. It 
+then provides an organized representation of these events by date. I include 
+classes, Date and DateSet, to store and manage infromation about the dates, 
+as well as a series of functions for inserting, retrieving, and connecting 
+lines of input. 
+
+"""
+
+
+import sys
+
+"""
+Class Date:
+
+This class represents a date and its associated events. Each instance of the 
+Date class contains a string representing the canonical representation of 
+the date and a list of events occurring on that date.
+
+The important methods of this class are:
+__init__(self, date, event): Initializes a Date object with the given date and 
+the first event associated with that date.
+
+Getter methods for the attributes:
+get_event(self): Returns the original date string of the Date object.
+add_event(self, event): Adds the event, represented as a string, to the 
+collection of events associated with the Date object.
+
+
+"""
+class Date:
+    def __init__(self,date,event):
+        self.original_date = date
+        self.event_list = [event]
+    
+    """
+    get_event(self): Returns the original date string of the Date object.
+
+    Parameters:
+        self : Instance for which the original date string is requested.
+
+    Returns: 
+        String representing the original date of the Date object.
+    """
+    def get_event(self):
+        return self.original_date
+    
+    """
+    add_event(self, event): Adds the event, represented as a string, to the 
+    collection of events associated with the Date object.
+
+    Parameters:
+    self : The instance of the Date object to which the event will be added.
+    event : Represents (as a string) an event to be added to the Date object's
+    collection.
+
+    Returns: None
+
+    """
+    
+    def add_event(self,event):
+        self.event_list.append(event)
+    
+    def __str__(self):
+        return self.original_date
+
+"""
+Class DateSet: This class represents a collection of dates using a dictionary
+of Date objects. 
+
+Methods:
+
+__init__(self): Initializes an empty DateSet object with an empty date_dict.
+add_date(self, date_obj): Adds a Date object to the date_dict with 
+its canonical date string as the key.
+
+"""
+
+class DateSet:
+    def __init__(self):
+        self.date_dict = {}
+    """
+    add_date(self, date_obj): Adds a Date object to the date_dict with 
+    its canonical date string as the key.
+
+    Parameters:
+    self : The instance of the DateSet object to which the Date object 
+    will be added.
+    date_obj : A Date object to be added to the date_dict.
+
+    Returns: 
+        None
+    """
+    def add_date(self,date_obj):
+        # Add Date object to the dictionary with its canonical representation.
+        self.date_dict[str(date_obj)] = date_obj
+
+
+"""
+canonical_date(original_date): Converts a date string to a canonical date 
+string in the format "YYYY-M-DD".
+
+Parameters:
+original_date : A string representing a date in one of different formats
+
+Returns: 
+A string representing the canonical date in the format "YYYY-M-DD" if the 
+input original_date is in a valid format, and None if the input date format is 
+invalid or if the day is greater than 31.
+
+"""
+def canonical_date(original_date):
+    list_months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 
+                   'Jul', 'Aug','Sep', 'Oct', 'Nov', 'Dec']
+    if "/" in original_date:
+        original_date = original_date.split("/")
+        year = original_date[2]
+        mm = original_date[0]
+        dd = original_date[1]
+    elif "-" in original_date:
+        original_date = original_date.split("-")
+        year = original_date[0]
+        mm = original_date[1]
+        dd = original_date[2]
+    elif original_date.split()[0] in list_months:
+        original_date = original_date.split()
+        year = original_date[2]
+        dd = original_date[1]
+        for i in range(len(list_months)):
+            if list_months[i] == original_date[0]:
+                mm = i + 1
+    else:
+        return None
+    if int(dd)>31:
+        return None
+    # Change the list_months format to include leading zero
+    return ("{:d}-{:d}-{:02d}".format(int(year), int(mm), int(dd)))  
+
+"""
+
+insert_line(line, set_Date): Processes a line starting with 'I' and inserts 
+the event associated with the date into the set_Date object.
+
+Parameters:
+line : A string representing a line starting with 'I' from the input file.
+set_Date : An instance of the DateSet class where the date and event will be 
+stored.
+
+Returns: None
+
+"""
+def insert_line(line, set_Date):
+    for i in range(0, len(line)):
+        if line[i] == ":":
+            original_date = line[1:i].strip()
+            event = " ".join(line[i+1:len(line)-1].split())
+            break
+    date_canonical = canonical_date(original_date)
+    if date_canonical is not None:
+        if date_canonical not in set_Date.date_dict.keys():
+            date_ob = Date(date_canonical, event)
+            set_Date.add_date(date_ob)
+        else:
+            set_Date.date_dict[date_canonical].add_event(event)
+            set_Date.date_dict[date_canonical].event_list.sort()
+    else:
+        pass
+
+"""
+
+retrieve_line(line, set_Date): Processes a line starting with 'R' and 
+retrieves the events associated with the date from the set_Date object.
+
+Parameters:
+    line : A string representing a line starting with 'R' from the input file.
+    set_Date : Instance of the DateSet class from which the events will be 
+    retrieved.
+
+Returns: None
+
+"""
+def retrieve_line(line, set_Date):
+    original_date = line[1:len(line)].strip()
+    date_canonical = canonical_date(original_date)
+    if date_canonical is not None:
+        event_list = set_Date.date_dict.get(date_canonical, None)
+        if event_list is not None:
+            for event in event_list.event_list:
+                year, month, day = date_canonical.split('-')
+                print(f"{year}-{int(month)}-{int(day)}: {event}")
+        else:
+            pass
+    else:
+        print('Error - Illegal operation.')
+
+"""
+connect_lines(file_lines, set_Date): Processes each line in the text file and 
+calls either function (insert_line or retrieve_line) based on the first 
+character ('I' or 'R').
+
+Parameters:
+    file_lines : A list of strings, where each string represents a line from 
+    the input file.
+    set_Date : An instance of the DateSet class to store and retrieve dates 
+    and events.
+
+Returns: None
+
+"""
+def connect_lines(file_lines, set_Date):
+    for line in file_lines:
+        if line[0] == 'I':
+            insert_line(line, set_Date)
+        elif line[0] == 'R':
+            retrieve_line(line, set_Date)
+        else:
+            print('Error - Illegal operation.')
+
+def main():
+    filename = input()
+    try:
+        with open(filename) as file:
+            file_lines = file.readlines()
+    except FileNotFoundError:
+        sys.exit(1)
+        
+    set_Date = DateSet()
+    connect_lines(file_lines, set_Date)
+
+main()
