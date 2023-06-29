@@ -7,3 +7,4 @@ Welcome to my highlighted projects repository! I have attached five main project
 3. **Dates.py**
 4. **Writer-bot.py**
 5. **Marketing Plan**
+6. **Machine Learning Research Paper**
